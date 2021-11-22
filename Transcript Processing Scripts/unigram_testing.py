@@ -4,12 +4,9 @@ import os
 import math
 
 #initialize variables
-dirname ='C:\\...\\transcripts_srt\\textanalytics_srt' #update to file directory where transcripts are on your local
-ext = '.srt'
 timestamp_dict = {}
 transcripts = []
-unigram_text_data = []
-unigram_prob_dict = {}
+wiki = []
 
 # helper function for writing python lists to file
 # use cases - to write all transcripts to one file and in the end to write all typos and their timestamps to files
@@ -37,6 +34,7 @@ def unigram_text_formatter(text):
 # also adds all of the words from each transcript to a list for consumption by the unigram model
 def read_transcript(files):
     curr_file = files
+    unigram_text_data = []
     documents_path = dirname + '\\' + files
     with open (documents_path, 'r') as doc:
         doc_list = []
@@ -64,12 +62,30 @@ def read_transcript(files):
         string_list = string.join(doc_list)
         transcripts.append(string_list.strip())
 
+        return unigram_text_data
+
+# open wiki pages and covert to a list that can be used for background unigram model
+def read_wiki(files, dirname):
+    curr_file = files
+    unigram_text_data = []
+    documents_path = dirname + '\\' + files
+    with open (documents_path, 'r', encoding="utf8") as doc:
+        doc_list = []
+        for line in doc.readlines():
+            clean_text = unigram_text_formatter(line.strip())
+            unigram_text_data.append(clean_text.split(' '))
+            
+    return unigram_text_data
 
 # iterates through all of the transcript files at the specified directory
-def read_files():
+def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
-        if files.endswith(ext):
-            read_transcript(files)
+        if files.endswith(ext) and ftype == 'transcript':
+            transcript_text_data = read_transcript(files, dirname)
+            return transcript_text_data
+        elif files.endswith(ext) and ftype == 'wiki':
+            wiki_text_data = read_wiki(files, dirname)
+            return wiki_text_data
 
 # test finding timestamp for typo
 def get_timestamp(val):
@@ -110,16 +126,67 @@ class UnigramLanguageModel:
 
 # function to store the probabilities for each word in a dictionary
 def store_unigram_probs(sorted_vocab_keys, model):
+    unigram_prob_dict = {}
     for vocab_key in sorted_vocab_keys:
         unigram_prob_dict[vocab_key] = model.calculate_unigram_probability(vocab_key)
+    return unigram_prob_dict
 
-# read the transcript files and built the unigram model
-read_files()
+# function to create a mixture of 2 unigram models
+# using basic linear interpolation between the probabilities for each model
+def unigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam = 0):
+    mixture_prob_dict = {}
+    for vocab_key, value in transcript_prob_dict.items():
+        mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * wiki_prob_dict.get(vocab_key, 0))
+        
+    return mixture_prob_dict
+
+# class for building bigram language model
+# this is a start, haven't tested it
+# need to build a list that has one entry per sentence
+class BigramLanguageModel(UnigramLanguageModel):
+    def __init__(self, text_data, smoothing=False):
+        UnigramLanguageModel.__init__(self, text_data, smoothing)
+        self.bigram_frequencies = {}
+        self.unique_bigrams = set()
+        for sentence in text_data:
+            previous_word = None
+            for word in sentence:
+                if previous_word != None:
+                    self.bigram_frequencies[(previous_word, word)] = self.bigram_frequencies.get((previous_word, word), 0) + 1
+                    self.unique_bigrams.add((previous_word, word))                                                     
+                previous_word = word
+        self.unique__bigram_words = len(self.unigram_frequencies)
+
+    def calculate_bigram_probability(self, previous_word, word):
+        bigram_word_prob_num = self.bigram_frequencies.get((previous_word, word), 0)
+        bigram_word_prob_den = self.unigram_frequencies.get(previous_word, 0)
+        if self.smoothing:
+            bigram_word_prob_num += 1
+            bigram_word_prob_den += self.unique__bigram_words
+        return 0.0 if bigram_word_prob_num == 0 or bigram_word_prob_den == 0 else float(
+            bigram_word_prob_num) / float(bigram_word_prob_den)
+
+# read the transcript files and wiki files
+transcript_text_data = read_files(dirname='C:\\Users\\Administrator\\OneDrive\\Documents\\Text Info Systems\\transcripts_srt\\transcripts', ftype='transcript', ext ='.srt')
+wiki_text_data = read_files(dirname='C:\\Users\\Administrator\\OneDrive\\Documents\\Text Info Systems\\transcripts_srt\\wiki', ftype='wiki', ext='.txt')
+
+# build the unigram models for transcripts and wiki
 transcript_model = UnigramLanguageModel(unigram_text_data)
-sorted_vocab_keys = transcript_model.sorted_vocabulary()
-write_list_to_file(sorted_vocab_keys, 'vocab_keys.txt')
-store_unigram_probs(sorted_vocab_keys, transcript_model)
-write_dict_to_file(unigram_prob_dict, 'frequencies.txt')
+wiki_model = UnigramLanguageModel(wiki_text_data)
+transcript_sorted_vocab_keys = transcript_model.sorted_vocabulary()
+wiki_sorted_vocab_keys = wiki_model.sorted_vocabulary()
+
+# calculate the probabilities
+transcript_prob_dict = store_unigram_probs(transcript_sorted_vocab_keys, transcript_model)
+wiki_prob_dict = store_unigram_probs(wiki_sorted_vocab_keys, wiki_model)
+mix_prob_dict = unigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam=.1)
+
+# write things to file, mainly for inspection
+write_list_to_file(transcript_sorted_vocab_keys, 'transcript_vocab_keys.txt')
+write_list_to_file(wiki_sorted_vocab_keys, 'wiki_vocab_keys.txt')
+write_dict_to_file(transcript_prob_dict, 'transcript_frequencies.txt')
+write_dict_to_file(wiki_prob_dict, 'wiki_frequencies.txt')
+write_dict_to_file(mix_prob_dict, 'mixt_frequencies.txt')
 write_list_to_file(transcripts, 'transcript_master_file.txt')
 
 
