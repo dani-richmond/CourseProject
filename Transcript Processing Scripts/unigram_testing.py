@@ -167,8 +167,8 @@ class BigramLanguageModel(UnigramLanguageModel):
             bigram_word_prob_num) / float(bigram_word_prob_den)
 
 # read the transcript files and wiki files
-transcript_text_data = read_files(dirname='C:\\Users\\Administrator\\OneDrive\\Documents\\Text Info Systems\\transcripts_srt\\transcripts', ftype='transcript', ext ='.srt')
-wiki_text_data = read_files(dirname='C:\\Users\\Administrator\\OneDrive\\Documents\\Text Info Systems\\transcripts_srt\\wiki', ftype='wiki', ext='.txt')
+transcript_text_data = read_files(dirname='C:\\...\\transcripts', ftype='transcript', ext ='.srt') #update to your own file path
+wiki_text_data = read_files(dirname='C:\\...\\wiki', ftype='wiki', ext='.txt') #update to your own file path
 
 # build the unigram models for transcripts and wiki
 transcript_model = UnigramLanguageModel(unigram_text_data)
