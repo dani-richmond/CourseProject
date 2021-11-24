@@ -32,7 +32,8 @@ def unigram_text_formatter(text):
 
 # opens each transcript document and converts it to a list then appends the entire transcript as one item to the transcripts list
 # also adds all of the words from each transcript to a list for consumption by the unigram model
-def read_transcript(files):
+def read_transcript(files, dirname):
+    print("Starting read of transcript files...")
     curr_file = files
     unigram_text_data = []
     documents_path = dirname + '\\' + files
@@ -66,6 +67,7 @@ def read_transcript(files):
 
 # open wiki pages and covert to a list that can be used for background unigram model
 def read_wiki(files, dirname):
+    print("Starting read of wiki files...")
     curr_file = files
     unigram_text_data = []
     documents_path = dirname + '\\' + files
@@ -110,6 +112,7 @@ class UnigramLanguageModel:
 
     # find the probability of each word as the count of the word / total words in the corpus
     def calculate_unigram_probability(self, word):
+        print("Calculating unigram probibilities...")
         word_prob_num = self.unigram_frequencies.get(word,0)
         word_prob_den = self.corpus_length
         if self.smoothing:
