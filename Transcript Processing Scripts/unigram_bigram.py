@@ -44,7 +44,7 @@ def write_tuple_dict_to_file(results, file_name):
 def unigram_text_formatter(text):
     new_line = text.lower()
     new_line = re.sub(r"'s\b","",new_line)
-    new_line = re.sub("[^a-zA-Z]", " ", new_line)
+    new_line = re.sub("[^a-zA-Z]", "", new_line)
     new_line = re.sub("\s+", "", new_line) # remove extra spaces
     return new_line
 
