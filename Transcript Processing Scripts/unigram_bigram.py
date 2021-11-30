@@ -45,7 +45,7 @@ def unigram_text_formatter(text):
     new_line = text.lower()
     new_line = re.sub(r"'s\b","",new_line)
     new_line = re.sub("[^a-zA-Z]", " ", new_line)
-    new_line = re.sub("\s+", " ", new_line) # remove extra spaces
+    new_line = re.sub("\s+", "", new_line) # remove extra spaces
     return new_line
 
 # opens each transcript document and converts it to a list then appends the entire transcript as one item to the transcripts list
@@ -100,10 +100,8 @@ def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
         if files.endswith(ext) and ftype == 'transcript':
             transcript_text_data = read_transcript(files, dirname)
-            return transcript_text_data
         elif files.endswith(ext) and ftype == 'wiki':
             wiki_text_data = read_wiki(files, dirname)
-            return wiki_text_data
 
 # test finding timestamp for typo
 def get_timestamp(val):
@@ -205,12 +203,12 @@ def bigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam = 0):
     return bigram_mixture_prob_dict
 
 # read the transcript files and wiki files
-transcript_text_data = read_files(dirname='transcripts_sample', ftype='transcript', ext ='.srt') #update to your own file path
-wiki_text_data = read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
+read_files(dirname='transcripts_sample', ftype='transcript', ext ='.srt') #update to your own file path
+read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
 
 # build the unigram models for transcripts and wiki
-transcript_model = UnigramLanguageModel(transcript_text_data)
-wiki_model = UnigramLanguageModel(wiki_text_data)
+transcript_model = UnigramLanguageModel(transcripts)
+wiki_model = UnigramLanguageModel(wiki)
 transcript_sorted_vocab_keys = transcript_model.sorted_vocabulary()
 wiki_sorted_vocab_keys = wiki_model.sorted_vocabulary()
 
