@@ -7,6 +7,8 @@ import math
 timestamp_dict = {}
 transcripts = []
 wiki = []
+transcript_unigram_data = []
+wiki_unigram_data = []
 
 # helper function for writing python lists to file
 # use cases - to write all transcripts to one file and in the end to write all typos and their timestamps to files
@@ -44,15 +46,14 @@ def write_tuple_dict_to_file(results, file_name):
 def unigram_text_formatter(text):
     new_line = text.lower()
     new_line = re.sub(r"'s\b","",new_line)
-    new_line = re.sub("[^a-zA-Z]", "", new_line)
-    new_line = re.sub("\s+", "", new_line) # remove extra spaces
+    new_line = re.sub("[^a-zA-Z ]", "", new_line)
+    new_line = re.sub("\s+", " ", new_line) # remove extra spaces
     return new_line
 
 # opens each transcript document and converts it to a list then appends the entire transcript as one item to the transcripts list
 # also adds all of the words from each transcript to a list for consumption by the unigram model
 def read_transcript(files, dirname):
     curr_file = files
-    unigram_text_data = []
     documents_path = dirname + '/' + files
     with open (documents_path, 'r') as doc:
         doc_list = []
@@ -73,35 +74,30 @@ def read_transcript(files, dirname):
                 elif not line.startswith('\n'):
                     doc_list.append(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
                     clean_text = unigram_text_formatter(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
-                    unigram_text_data.append(clean_text.split(' '))
+                    transcript_unigram_data.append(clean_text.split(' '))
 
         # after iterating through all of the lines in a transcript, append it to the main transcripts list     
         string = ' '
         string_list = string.join(doc_list)
         transcripts.append(string_list.strip())
 
-        return unigram_text_data
-
 # open wiki pages and covert to a list that can be used for background unigram model
 def read_wiki(files, dirname):
     curr_file = files
-    unigram_text_data = []
     documents_path = dirname + '/' + files
     with open (documents_path, 'r', encoding="utf8") as doc:
         doc_list = []
         for line in doc.readlines():
             clean_text = unigram_text_formatter(line.strip())
-            unigram_text_data.append(clean_text.split(' '))
-            
-    return unigram_text_data
+            wiki_unigram_data.append(clean_text.split(' '))
 
 # iterates through all of the transcript files at the specified directory
 def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
         if files.endswith(ext) and ftype == 'transcript':
-            transcript_text_data = read_transcript(files, dirname)
+            read_transcript(files, dirname)
         elif files.endswith(ext) and ftype == 'wiki':
-            wiki_text_data = read_wiki(files, dirname)
+            read_wiki(files, dirname)
 
 # test finding timestamp for typo
 def get_timestamp(val):
@@ -207,14 +203,15 @@ read_files(dirname='transcripts_sample', ftype='transcript', ext ='.srt') #updat
 read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
 
 # build the unigram models for transcripts and wiki
-transcript_model = UnigramLanguageModel(transcripts)
-wiki_model = UnigramLanguageModel(wiki)
+transcript_model = UnigramLanguageModel(transcript_unigram_data)
+wiki_model = UnigramLanguageModel(wiki_unigram_data)
 transcript_sorted_vocab_keys = transcript_model.sorted_vocabulary()
 wiki_sorted_vocab_keys = wiki_model.sorted_vocabulary()
 
 # build the bigram models for transcripts and wiki
-transcript_bigram_model = BigramLanguageModel(transcript_text_data)
-wiki_bigram_model = BigramLanguageModel(wiki_text_data)
+# update
+transcript_bigram_model = BigramLanguageModel(transcript_unigram_data)
+wiki_bigram_model = BigramLanguageModel(wiki_unigram_data)
 transcript_bigram_sorted_vocab_keys = transcript_bigram_model.sorted_vocabulary()
 wiki_bigram_sorted_vocab_keys = wiki_bigram_model.sorted_vocabulary()
 
