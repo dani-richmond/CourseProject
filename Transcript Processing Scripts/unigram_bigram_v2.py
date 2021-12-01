@@ -7,8 +7,8 @@ import math
 timestamp_dict = {}
 transcripts = []
 wiki = []
-transcript_unigram_data = []
-wiki_unigram_data = []
+# transcript_unigram_data = []
+# wiki_unigram_data = []
 
 # helper function for writing python lists to file
 # use cases - to write all transcripts to one file and in the end to write all typos and their timestamps to files
@@ -71,26 +71,29 @@ def read_transcript(files, dirname):
                         timestamp_dict[curr_file + ' : ' + line.strip()] = lines[index+1].strip()
                 # if it's not a blank line, add the line to the transcript's list
                 # removing the meaningless words that are often at beginning/end of transcripts [SOUND] etc.
-                elif not line.startswith('\n'):
-                    doc_list.append(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
-                    clean_text = unigram_text_formatter(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
-                    transcript_unigram_data.append(clean_text.split(' '))
+                elif not (line.startswith('\n') or line.strip()=='[SOUND]' or line.strip()=='[MUSIC]' or line.strip()=='[NOISE]'):
+                    doc_list.append(line.replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]','').strip())
+                    # clean_text = unigram_text_formatter(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
+                    # transcript_unigram_data.append(clean_text.split(' '))
 
-        # after iterating through all of the lines in a transcript, append it to the main transcripts list     
-        string = ' '
-        string_list = string.join(doc_list)
-        transcripts.append(string_list.strip())
+        # after iterating through all of the lines in a transcript, append it to the main transcripts list   
+        # string = ' '
+        # string_list = string.join(doc_list)
+        transcripts.append(' '.join([str(elem) for elem in doc_list])) # convert each doc list to string and append to transcripts
+
 
 # open wiki pages and covert to a list that can be used for background unigram model
 def read_wiki(files, dirname):
     curr_file = files
     documents_path = dirname + '/' + files
+            
     with open (documents_path, 'r', encoding="utf8") as doc:
-        doc_list = []
         for line in doc.readlines():
-            clean_text = unigram_text_formatter(line.strip())
-            wiki_unigram_data.append(clean_text.split(' '))
-
+            # clean_text = unigram_text_formatter(line.strip())
+            # wiki_unigram_data.append(clean_text.split(' '))
+            # after iterating through all of the lines in a transcript, append it to the main transcripts list     
+            wiki.append(line.strip())
+    
 # iterates through all of the transcript files at the specified directory
 def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
@@ -111,9 +114,10 @@ class UnigramLanguageModel:
     def __init__(self, text_data, smoothing=False):
         self.unigram_frequencies = {}
         self.corpus_length = 0
+        text_data = [unigram_text_formatter(text) for text in text_data]
         # iterate through the words in all transcripts and update each word's count 
         for line in text_data:
-            for word in line:
+            for word in line.split(' '):
                 self.unigram_frequencies[word] = self.unigram_frequencies.get(word, 0) + 1
                 self.corpus_length += 1
         self.unique_words = len(self.unigram_frequencies)
@@ -157,22 +161,26 @@ class BigramLanguageModel(UnigramLanguageModel):
     def __init__(self, text_data, smoothing=False):
         UnigramLanguageModel.__init__(self, text_data, smoothing)
         self.bigram_frequencies = {}
+        # self.unigram_frequencies = {}
         self.unique_bigrams = set()
+        self.smoothing = smoothing
+        text_data = [unigram_text_formatter(text) for text in text_data]
         for sentence in text_data:
             previous_word = None
-            for word in sentence:
+            for word in sentence.split(' '):
                 if previous_word != None:
                     self.bigram_frequencies[(previous_word, word)] = self.bigram_frequencies.get((previous_word, word), 0) + 1
+                    # self.unigram_frequencies[word] = self.unigram_frequencies.get(word, 0) + 1
                     self.unique_bigrams.add((previous_word, word))                                                     
                 previous_word = word
-        self.unique__bigram_words = len(self.unigram_frequencies)
+        self.unique_bigram_words = len(self.unigram_frequencies)
         
     def calculate_bigram_probability(self, previous_word, word):
         bigram_word_prob_num = self.bigram_frequencies.get((previous_word, word), 0)
         bigram_word_prob_den = self.unigram_frequencies.get(previous_word, 0)
         if self.smoothing:
             bigram_word_prob_num += 1
-            bigram_word_prob_den += self.unique__bigram_words
+            bigram_word_prob_den += self.unique_bigram_words
         return 0.0 if bigram_word_prob_num == 0 or bigram_word_prob_den == 0 else float(
             bigram_word_prob_num) / float(bigram_word_prob_den)
 
@@ -199,19 +207,19 @@ def bigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam = 0):
     return bigram_mixture_prob_dict
 
 # read the transcript files and wiki files
-read_files(dirname='transcripts_sample', ftype='transcript', ext ='.srt') #update to your own file path
+read_files(dirname='transcripts', ftype='transcript', ext ='.srt') #update to your own file path
 read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
 
 # build the unigram models for transcripts and wiki
-transcript_model = UnigramLanguageModel(transcript_unigram_data)
-wiki_model = UnigramLanguageModel(wiki_unigram_data)
+transcript_model = UnigramLanguageModel(transcripts)
+wiki_model = UnigramLanguageModel(wiki)
 transcript_sorted_vocab_keys = transcript_model.sorted_vocabulary()
 wiki_sorted_vocab_keys = wiki_model.sorted_vocabulary()
 
 # build the bigram models for transcripts and wiki
 # update
-transcript_bigram_model = BigramLanguageModel(transcript_unigram_data)
-wiki_bigram_model = BigramLanguageModel(wiki_unigram_data)
+transcript_bigram_model = BigramLanguageModel(transcripts)
+wiki_bigram_model = BigramLanguageModel(wiki)
 transcript_bigram_sorted_vocab_keys = transcript_bigram_model.sorted_vocabulary()
 wiki_bigram_sorted_vocab_keys = wiki_bigram_model.sorted_vocabulary()
 
@@ -232,6 +240,7 @@ write_dict_to_file(transcript_prob_dict, 'transcript_frequencies.txt')
 write_dict_to_file(wiki_prob_dict, 'wiki_frequencies.txt')
 write_dict_to_file(mix_prob_dict, 'mixt_frequencies.txt')
 write_list_to_file(transcripts, 'transcript_master_file.txt')
+write_list_to_file(wiki, 'wiki_master_file.txt')
 
 # write bigram data to file
 write_list_of_tuples_to_file(transcript_bigram_sorted_vocab_keys, 'transcript_bigram_vocab_keys.txt')
