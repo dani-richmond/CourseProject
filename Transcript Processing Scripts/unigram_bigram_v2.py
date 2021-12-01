@@ -2,11 +2,19 @@
 import re
 import os
 import math
+import nltk
+
+# test code for nltk
+from nltk import sent_tokenize, word_tokenize
+# sentences = 'This is a foo bar sentence. This is another sentence.'
+# tokenized_sents = [word_tokenize(sent) for sent in sent_tokenize(sentences)]
+# print(tokenized_sents)
 
 #initialize variables
 timestamp_dict = {}
 transcripts = []
-wiki = []
+# wiki = []
+textbook = []
 # transcript_unigram_data = []
 # wiki_unigram_data = []
 
@@ -46,8 +54,9 @@ def write_tuple_dict_to_file(results, file_name):
 def unigram_text_formatter(text):
     new_line = text.lower()
     new_line = re.sub(r"'s\b","",new_line)
-    new_line = re.sub("[^a-zA-Z ]", "", new_line)
+    new_line = re.sub("[^a-zA-Z \n]", "", new_line)
     new_line = re.sub("\s+", " ", new_line) # remove extra spaces
+    new_line = new_line.strip()
     return new_line
 
 # opens each transcript document and converts it to a list then appends the entire transcript as one item to the transcripts list
@@ -75,15 +84,29 @@ def read_transcript(files, dirname):
                     doc_list.append(line.replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]','').strip())
                     # clean_text = unigram_text_formatter(line.strip().replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]',''))
                     # transcript_unigram_data.append(clean_text.split(' '))
-
         # after iterating through all of the lines in a transcript, append it to the main transcripts list   
         # string = ' '
         # string_list = string.join(doc_list)
-        transcripts.append(' '.join([str(elem) for elem in doc_list])) # convert each doc list to string and append to transcripts
+        string_text = ' '.join([str(elem) for elem in doc_list]) # combine broken sentences and the whole transcript into a single string
+        string_list = nltk.tokenize.sent_tokenize(string_text) # break down by sentences
+        # transcripts.append(' '.join([str(elem) for elem in doc_list])) # convert each doc list to string and append to transcripts
+        transcripts.extend(string_list) # add to main transcripts. Using extend instead of append so that we get merged lists (instead of list of lists)
 
 
 # open wiki pages and covert to a list that can be used for background unigram model
-def read_wiki(files, dirname):
+# def read_wiki(files, dirname):
+#     curr_file = files
+#     documents_path = dirname + '/' + files
+            
+#     with open (documents_path, 'r', encoding="utf8") as doc:
+#         for line in doc.readlines():
+#             # clean_text = unigram_text_formatter(line.strip())
+#             # wiki_unigram_data.append(clean_text.split(' '))
+#             # after iterating through all of the lines in a transcript, append it to the main transcripts list     
+#             wiki.append(line.strip())
+
+# open textbook pages and covert to a list that can be used for background unigram model
+def read_textbook(files, dirname):
     curr_file = files
     documents_path = dirname + '/' + files
             
@@ -92,15 +115,17 @@ def read_wiki(files, dirname):
             # clean_text = unigram_text_formatter(line.strip())
             # wiki_unigram_data.append(clean_text.split(' '))
             # after iterating through all of the lines in a transcript, append it to the main transcripts list     
-            wiki.append(line.strip())
+            textbook.append(line.strip())
     
 # iterates through all of the transcript files at the specified directory
 def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
         if files.endswith(ext) and ftype == 'transcript':
             read_transcript(files, dirname)
-        elif files.endswith(ext) and ftype == 'wiki':
-            read_wiki(files, dirname)
+        # elif files.endswith(ext) and ftype == 'wiki':
+        #     read_wiki(files, dirname)
+        elif files.endswith(ext) and ftype == 'textbook':
+            read_textbook(files, dirname)
 
 # test finding timestamp for typo
 def get_timestamp(val):
@@ -149,10 +174,10 @@ def store_unigram_probs(sorted_vocab_keys, model):
 
 # function to create a mixture of 2 unigram models
 # using basic linear interpolation between the probabilities for each model
-def unigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam = 0):
+def unigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
     mixture_prob_dict = {}
     for vocab_key, value in transcript_prob_dict.items():
-        mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * wiki_prob_dict.get(vocab_key, 0))
+        mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * textbook_prob_dict.get(vocab_key, 0))
         
     return mixture_prob_dict
 
@@ -199,54 +224,55 @@ def store_bigram_probs(sorted_vocab_keys, model):
 
 # function to create a mixture of 2 bigram models
 # using basic linear interpolation between the probabilities for each model
-def bigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam = 0):
+def bigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
     bigram_mixture_prob_dict = {}
     for vocab_key, value in transcript_prob_dict.items():
-        bigram_mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * wiki_prob_dict.get(vocab_key, 0))
+        bigram_mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * textbook_prob_dict.get(vocab_key, 0))
         
     return bigram_mixture_prob_dict
 
 # read the transcript files and wiki files
 read_files(dirname='transcripts', ftype='transcript', ext ='.srt') #update to your own file path
-read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
+# read_files(dirname='wiki_sample', ftype='wiki', ext='.txt') #update to your own file path
+read_files(dirname='textbook_sample', ftype='textbook', ext='.txt') #update to your own file path
 
-# build the unigram models for transcripts and wiki
+# build the unigram models for transcripts and textbook
 transcript_model = UnigramLanguageModel(transcripts)
-wiki_model = UnigramLanguageModel(wiki)
+textbook_model = UnigramLanguageModel(textbook)
 transcript_sorted_vocab_keys = transcript_model.sorted_vocabulary()
-wiki_sorted_vocab_keys = wiki_model.sorted_vocabulary()
+textbook_sorted_vocab_keys = textbook_model.sorted_vocabulary()
 
-# build the bigram models for transcripts and wiki
+# build the bigram models for transcripts and textbook
 # update
 transcript_bigram_model = BigramLanguageModel(transcripts)
-wiki_bigram_model = BigramLanguageModel(wiki)
+textbook_bigram_model = BigramLanguageModel(textbook)
 transcript_bigram_sorted_vocab_keys = transcript_bigram_model.sorted_vocabulary()
-wiki_bigram_sorted_vocab_keys = wiki_bigram_model.sorted_vocabulary()
+textbook_bigram_sorted_vocab_keys = textbook_bigram_model.sorted_vocabulary()
 
 # calculate the probabilities
 transcript_prob_dict = store_unigram_probs(transcript_sorted_vocab_keys, transcript_model)
-wiki_prob_dict = store_unigram_probs(wiki_sorted_vocab_keys, wiki_model)
-mix_prob_dict = unigram_mixture_probs(transcript_prob_dict, wiki_prob_dict, lam=.1)
+textbook_prob_dict = store_unigram_probs(textbook_sorted_vocab_keys, textbook_model)
+mix_prob_dict = unigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam=.1)
 
 # calculate the bigram probabilities
 transcript_bigram_prob_dict = store_bigram_probs(transcript_bigram_sorted_vocab_keys, transcript_bigram_model)
-wiki_bigram_prob_dict = store_bigram_probs(wiki_bigram_sorted_vocab_keys, wiki_bigram_model)
-mix_bigram_prob_dict = bigram_mixture_probs(transcript_bigram_prob_dict, wiki_bigram_prob_dict, lam=.1)
+textbook_bigram_prob_dict = store_bigram_probs(textbook_bigram_sorted_vocab_keys, textbook_bigram_model)
+mix_bigram_prob_dict = bigram_mixture_probs(transcript_bigram_prob_dict, textbook_bigram_prob_dict, lam=.1)
 
 # write things to file, mainly for inspection
 write_list_to_file(transcript_sorted_vocab_keys, 'transcript_vocab_keys.txt')
-write_list_to_file(wiki_sorted_vocab_keys, 'wiki_vocab_keys.txt')
+write_list_to_file(textbook_sorted_vocab_keys, 'textbook_vocab_keys.txt')
 write_dict_to_file(transcript_prob_dict, 'transcript_frequencies.txt')
-write_dict_to_file(wiki_prob_dict, 'wiki_frequencies.txt')
+write_dict_to_file(textbook_prob_dict, 'textbook_frequencies.txt')
 write_dict_to_file(mix_prob_dict, 'mixt_frequencies.txt')
 write_list_to_file(transcripts, 'transcript_master_file.txt')
-write_list_to_file(wiki, 'wiki_master_file.txt')
+write_list_to_file(textbook, 'textbook_master_file.txt')
 
 # write bigram data to file
 write_list_of_tuples_to_file(transcript_bigram_sorted_vocab_keys, 'transcript_bigram_vocab_keys.txt')
-write_list_of_tuples_to_file(wiki_bigram_sorted_vocab_keys, 'wiki_bigram_vocab_keys.txt')
+write_list_of_tuples_to_file(textbook_bigram_sorted_vocab_keys, 'textbook_bigram_vocab_keys.txt')
 write_tuple_dict_to_file(transcript_bigram_prob_dict, 'transcript_bigram_frequencies.txt')
-write_tuple_dict_to_file(wiki_bigram_prob_dict, 'wiki_bigram_frequencies.txt')
+write_tuple_dict_to_file(textbook_bigram_prob_dict, 'textbook_bigram_frequencies.txt')
 write_tuple_dict_to_file(mix_bigram_prob_dict, 'mixt_bigram_frequencies.txt')
 
 #print(get_timestamp('classroom'))
