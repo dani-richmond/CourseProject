@@ -14,6 +14,8 @@ def load_corpus(file):
     text_file = open(file, "r")
     text_data = text_file.read()
     text_data = text_data.lower()
+    text_data = re.sub(r"'s\b","", text_data)
+    text_data = re.sub("[^a-zA-Z \n]", "", text_data)
     text_list = re.findall(r"[\w']+|[.,!?;]", text_data)
     text_file.close()
     return text_list
@@ -26,7 +28,6 @@ class TypoFinder:
         self.threshold = threshold
         self.uni_weight = uni_weight
         self.bi_weight = bi_weight
-        print(self.unigram_LM['a'])
 
     #Function to score words to deteremine if they could potentially be a typo
     def typo_flag(self, word, beg_combo, end_combo, threshold, uni_weight, bi_weight):
@@ -90,13 +91,13 @@ class TypoFinder:
 
         return typo_list
     
-
+'''
 #Testing functionality of TypoFinder
 
 #File names + directory for text (corpus, unigram LM, bigram LM)
-transcript_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\transcript_master_file.txt'
-unigram_LM_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\mixt_frequencies.txt'
-bigram_LM_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\fake_bigram.txt'
+transcript_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\transcript_master_file.txt'
+unigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\mixt_frequencies.txt'
+bigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\fake_bigram.txt'
 #Load string text (transcript) into list
 transcripts =  load_corpus(transcript_file)
 #Instantiate TypoFinder
@@ -106,4 +107,4 @@ typo_list = finder.typo_finder(transcripts)
 #Print 'typos' found
 for typo in typo_list:
     print(typo)
-
+'''

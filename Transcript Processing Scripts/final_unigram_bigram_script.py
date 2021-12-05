@@ -199,7 +199,7 @@ def bigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
         bigram_mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * textbook_prob_dict.get(vocab_key, 0))
         
     return bigram_mixture_prob_dict
-
+'''
 # read the transcript files and wiki files
 read_files(dirname='transcripts', ftype='transcript', ext ='.srt') #update to your own file path
 read_files(dirname='textbook', ftype='textbook', ext='.txt') #update to your own file path
@@ -241,4 +241,4 @@ write_list_of_tuples_to_file(textbook_bigram_sorted_vocab_keys, 'textbook_bigram
 write_tuple_dict_to_file(transcript_bigram_prob_dict, 'transcript_bigram_frequencies.txt')
 write_tuple_dict_to_file(textbook_bigram_prob_dict, 'textbook_bigram_frequencies.txt')
 write_tuple_dict_to_file(mix_bigram_prob_dict, 'mixt_bigram_frequencies.txt')
-
+'''
