@@ -14,9 +14,12 @@ def load_corpus(file):
     text_file = open(file, "r")
     text_data = text_file.read()
     text_data = text_data.lower()
-    text_list = re.findall(r"[\w']+|[.,!?;]", text_data)
+    text_data = re.sub(r"'s\b","", text_data)
+    text_data = re.sub("[^a-zA-Z \n]", "", text_data)
+    # print(text_data)
+    # text_list = re.findall(r"[\w']+|[.,!?;]", text_data)
     text_file.close()
-    return text_list
+    return text_data
 
 #Class to find typos in a corpus of text
 class TypoFinder:
@@ -26,7 +29,6 @@ class TypoFinder:
         self.threshold = threshold
         self.uni_weight = uni_weight
         self.bi_weight = bi_weight
-        print(self.unigram_LM['a'])
 
     #Function to score words to deteremine if they could potentially be a typo
     def typo_flag(self, word, beg_combo, end_combo, threshold, uni_weight, bi_weight):
@@ -64,45 +66,38 @@ class TypoFinder:
         before_combo = ''
         after_combo = ''
         typo_list = []
-
         #Loop through corpus list and pull out each word and word context (left/right of word) and run through 'typo_flag'
-        for index, word in enumerate(corpus):
-            #Find appropriate unigram words (not punctuation)
-            if word in ".,!?;":
-                continue
-            else:
-                uni_word = word
-            #Get bigram combo for word and word before it
-            if index != 0 and corpus[index-1] not in ".,!?;":
-                before_combo = corpus[index-1] + " " + word
-            else:
-                before_combo = ''
-            #Get bigram combo for word and word after it
-            if index != len(corpus)-1 and corpus[index+1] not in ".,!?;":
-                after_combo = word + " "  + corpus[index+1]
-            else:
-                after_combo = ''
-            #Run the word and bigram word combos through the 'typo_flag' to get mixed probability score and threshold comparison
-            typo, probability = self.typo_flag(uni_word, before_combo, after_combo, self.threshold, self.uni_weight, self.bi_weight)
-            #If 'typo_flag' returned None, not a typo.  Otherwise, add to typo_list
-            if typo != None:
-                typo_list.append([index, word, probability])
-
+        for sentence in corpus.split('\n'):
+            for index, word in enumerate(re.findall(r"[\w']+|[.,!?;]", sentence)):
+                #Find appropriate unigram words (not punctuation)
+                if word in ".,!?;":
+                    continue
+                else:
+                    uni_word = word
+                #Get bigram combo for word and word before it
+                if index != 0 and corpus[index-1] not in ".,!?;":
+                    before_combo = corpus[index-1] + " " + word
+                else:
+                    before_combo = ''
+                #Get bigram combo for word and word after it
+                if index != len(corpus)-1 and corpus[index+1] not in ".,!?;":
+                    after_combo = word + " "  + corpus[index+1]
+                else:
+                    after_combo = ''
+                #Run the word and bigram word combos through the 'typo_flag' to get mixed probability score and threshold comparison
+                typo, probability = self.typo_flag(uni_word, before_combo, after_combo, self.threshold, self.uni_weight, self.bi_weight)
+                #If 'typo_flag' returned None, not a typo.  Otherwise, add to typo_list
+                if typo != None:
+                    typo_list.append([index, word, probability, sentence])
         return typo_list
-
-
+    
+'''
 #Testing functionality of TypoFinder
 
 #File names + directory for text (corpus, unigram LM, bigram LM)
-#transcript_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\transcript_master_file.txt'
-#unigram_LM_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\mixt_frequencies.txt'
-#bigram_LM_file = 'E:\\School\\UIUC\\0. CS410\\Project\\CourseProject\\Transcript Processing Scripts\\fake_bigram.txt'
-
-#my edit to files
-transcript_file = 'transcript_master_file.txt'
-unigram_LM_file = 'mixt_frequencies.txt'
-bigram_LM_file = 'fake_bigram.txt'
-
+transcript_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\transcript_master_file.txt'
+unigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\mixt_frequencies.txt'
+bigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\fake_bigram.txt'
 #Load string text (transcript) into list
 transcripts =  load_corpus(transcript_file)
 #Instantiate TypoFinder
@@ -112,3 +107,4 @@ typo_list = finder.typo_finder(transcripts)
 #Print 'typos' found
 for typo in typo_list:
     print(typo)
+'''
