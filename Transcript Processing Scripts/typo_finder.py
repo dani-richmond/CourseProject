@@ -65,7 +65,7 @@ class TypoFinder:
         before_combo = ''
         after_combo = ''
         typo_list = []
-
+        print(corpus)
         #Loop through corpus list and pull out each word and word context (left/right of word) and run through 'typo_flag'
         for index, word in enumerate(corpus):
             #Find appropriate unigram words (not punctuation)

@@ -69,10 +69,12 @@ def read_transcript(files, dirname):
                 # if it's a timestamp line, add the timestamp as the dictionary key and add the next 2 lines of text as the dictionary value
                 # try/except is to handle when it's the last line of the transcript
                 if line.startswith('00:'):
+                    new_line2 = unigram_text_formatter(lines[index+1])
                     try:
-                        timestamp_dict[curr_file + ' : ' + line.strip()] = lines[index+1].strip() + ' ' + lines[index+2].strip()
+                        new_line3 = unigram_text_formatter(lines[index+2])
+                        timestamp_dict[curr_file + ' : ' + line.strip()] = new_line2.strip() + ' ' + new_line3.strip()
                     except IndexError:
-                        timestamp_dict[curr_file + ' : ' + line.strip()] = lines[index+1].strip()
+                        timestamp_dict[curr_file + ' : ' + line.strip()] = new_line2.strip()
                 # if it's not a blank line, add the line to the transcript's list
                 # removing the meaningless words that are often at beginning/end of transcripts [SOUND] etc.
                 elif not (line.startswith('\n') or line.strip()=='[SOUND]' or line.strip()=='[MUSIC]' or line.strip()=='[NOISE]'):
@@ -82,7 +84,7 @@ def read_transcript(files, dirname):
         string_text = ' '.join([str(elem) for elem in doc_list]) # combine broken sentences and the whole transcript into a single string
         string_list = nltk.tokenize.sent_tokenize(string_text) # break down by sentences
         transcripts.extend(string_list) # add to main transcripts. Using extend so we get merged lists
-
+        
 # open textbook pages and covert to a list that can be used for background unigram model
 def read_textbook(files, dirname):
     curr_file = files
@@ -102,6 +104,7 @@ def read_files(dirname, ftype, ext):
 
 # test finding timestamp for typo
 def get_timestamp(val):
+    # print(timestamp_dict)
     dict_entry = {key: value for key, value in timestamp_dict.items() if val in value}
     return dict_entry
 
