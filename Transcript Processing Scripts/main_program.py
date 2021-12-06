@@ -1,5 +1,5 @@
 import final_unigram_bigram_script as ngmod
-import typo_finder_with_sentence as tf
+import typo_finder as tf
 from os.path import exists
 
 #Main function to set up unigram and bigram models, load transcripts and find typos
