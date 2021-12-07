@@ -1,3 +1,4 @@
+#Import packages
 import re
 
 #Helper function to load ngram models from text file to dictionary
@@ -16,8 +17,6 @@ def load_corpus(file):
     text_data = text_data.lower()
     text_data = re.sub(r"'s\b","", text_data)
     text_data = re.sub("[^a-zA-Z \n]", "", text_data)
-    # print(text_data)
-    # text_list = re.findall(r"[\w']+|[.,!?;]", text_data)
     text_file.close()
     return text_data
 
@@ -91,20 +90,3 @@ class TypoFinder:
                     typo_list.append([index, word, probability, sentence])
         return typo_list
     
-'''
-#Testing functionality of TypoFinder
-
-#File names + directory for text (corpus, unigram LM, bigram LM)
-transcript_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\transcript_master_file.txt'
-unigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\mixt_frequencies.txt'
-bigram_LM_file = 'C:\\Users\\scott\\Documents\\School\\CS410\\CourseProject\\Transcript Processing Scripts\\fake_bigram.txt'
-#Load string text (transcript) into list
-transcripts =  load_corpus(transcript_file)
-#Instantiate TypoFinder
-finder = TypoFinder(unigram_LM_file, bigram_LM_file, .00005, .05, .05)
-#List of potential typos
-typo_list = finder.typo_finder(transcripts)
-#Print 'typos' found
-for typo in typo_list:
-    print(typo)
-'''
