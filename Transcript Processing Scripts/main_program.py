@@ -66,11 +66,26 @@ def main():
     typo_list = finder.typo_finder(transcripts)
 
     #Print 'typos' found
-    for typo in typo_list:
-        print("\n", typo)
-        dict_entry = ngmod.get_timestamp(typo[1])
-        print("\n", dict_entry, "\n")
-        print("-----------------------------------------\n")
+    #for typo in typo_list:
+        #print("\n", typo)
+        #dict_entry = ngmod.get_timestamp(typo[1])
+        #print("\n", dict_entry, "\n")
+        #print("-----------------------------------------\n")
+
+    with open('results.txt', 'w') as f:
+        for typo in typo_list:
+            for element in typo:
+                if type(element) != str:
+                    f.write(str(element) + ' ')
+                else:
+                    f.write(element + ' ')
+            f.write('\n')
+            dict_entry = ngmod.get_timestamp(typo[1])
+            f.write(str(dict_entry))
+            f.write('\n')
+            f.write('--------------------------------------------------')
+            f.write('\n')
+    f.close()
 
     # typo_df.to_pickle("results_df/typo_df_{}_{}_{}.pkl".format(unigram_weight, bigram_weight, prob_threshold))
 
