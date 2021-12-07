@@ -79,21 +79,21 @@ def read_transcript(files, dirname):
                 # removing the meaningless words that are often at beginning/end of transcripts [SOUND] etc.
                 elif not (line.startswith('\n') or line.strip()=='[SOUND]' or line.strip()=='[MUSIC]' or line.strip()=='[NOISE]'):
                     doc_list.append(line.replace('[SOUND]','').replace('[MUSIC]','').replace('[NOISE]','').strip())
-                    
+
         # after iterating through all of the lines of transcript, do final processing
         string_text = ' '.join([str(elem) for elem in doc_list]) # combine broken sentences and the whole transcript into a single string
         string_list = nltk.tokenize.sent_tokenize(string_text) # break down by sentences
         transcripts.extend(string_list) # add to main transcripts. Using extend so we get merged lists
-        
+
 # open textbook pages and covert to a list that can be used for background unigram model
 def read_textbook(files, dirname):
     curr_file = files
     documents_path = dirname + '/' + files
-            
+
     with open (documents_path, 'r', encoding="utf8") as doc:
-        for line in doc.readlines():    
+        for line in doc.readlines():
             textbook.append(line.strip())
-    
+
 # iterates through all of the transcript files or textbook at the specified directory
 def read_files(dirname, ftype, ext):
     for files in os.listdir(dirname):
@@ -104,8 +104,9 @@ def read_files(dirname, ftype, ext):
 
 # test finding timestamp for typo
 def get_timestamp(val):
-    # print(timestamp_dict)
-    dict_entry = {key: value for key, value in timestamp_dict.items() if val in value}
+    #print(timestamp_dict)
+    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
+
     return dict_entry
 
 # create class with functions that build unigram language model
@@ -114,7 +115,7 @@ class UnigramLanguageModel:
         self.unigram_frequencies = {}
         self.corpus_length = 0
         text_data = [unigram_text_formatter(text) for text in text_data]
-        # iterate through the words in all transcripts or textbook and update each word's count 
+        # iterate through the words in all transcripts or textbook and update each word's count
         for line in text_data:
             for word in line.split(' '):
                 self.unigram_frequencies[word] = self.unigram_frequencies.get(word, 0) + 1
@@ -151,7 +152,7 @@ def unigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
     mixture_prob_dict = {}
     for vocab_key, value in transcript_prob_dict.items():
         mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * textbook_prob_dict.get(vocab_key, 0))
-        
+
     return mixture_prob_dict
 
 # class for building bigram language model
@@ -168,10 +169,10 @@ class BigramLanguageModel(UnigramLanguageModel):
             for word in sentence.split(' '):
                 if previous_word != None:
                     self.bigram_frequencies[(previous_word, word)] = self.bigram_frequencies.get((previous_word, word), 0) + 1
-                    self.unique_bigrams.add((previous_word, word))                                                     
+                    self.unique_bigrams.add((previous_word, word))
                 previous_word = word
         self.unique_bigram_words = len(self.unigram_frequencies)
-        
+
     def calculate_bigram_probability(self, previous_word, word):
         bigram_word_prob_num = self.bigram_frequencies.get((previous_word, word), 0)
         bigram_word_prob_den = self.unigram_frequencies.get(previous_word, 0)
@@ -200,7 +201,7 @@ def bigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
     bigram_mixture_prob_dict = {}
     for vocab_key, value in transcript_prob_dict.items():
         bigram_mixture_prob_dict[vocab_key] = ((1 - lam) * value) + (lam * textbook_prob_dict.get(vocab_key, 0))
-        
+
     return bigram_mixture_prob_dict
 '''
 # read the transcript files and wiki files

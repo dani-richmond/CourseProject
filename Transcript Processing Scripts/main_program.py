@@ -17,7 +17,7 @@ def main():
     unigram_weight = 0.3
     bigram_weight = 0.7
     prob_threshold = 0.0000025 #it might be worth upping this to 0.000003.  Calls 100 more words, but better recall ('aa')
-    
+
 
     #Check if ngram language models and consolidated transcripts already exist in directory.  If not, create them.
     # if(exists(unigram_model) and exists(bigram_model) and exists(transcript_file)):
@@ -25,7 +25,7 @@ def main():
     # else:
     #Read text files and load to data structures
     ngmod.read_files(dirname=transcript_dir, ftype='transcript', ext ='.srt')
-    ngmod.read_files(dirname=textbook_dir, ftype='textbook', ext='.txt') 
+    ngmod.read_files(dirname=textbook_dir, ftype='textbook', ext='.txt')
 
     #Build unigram models for transcripts and wiki
     transcript_model = ngmod.UnigramLanguageModel(ngmod.transcripts)
@@ -64,12 +64,13 @@ def main():
     finder = tf.TypoFinder(unigram_model, bigram_model, prob_threshold, unigram_weight, bigram_weight)
     #List of potential typos
     typo_list = finder.typo_finder(transcripts)
-    
+
     #Print 'typos' found
     for typo in typo_list:
         print("\n", typo)
         dict_entry = ngmod.get_timestamp(typo[1])
-        print("\n", dict_entry)
+        print("\n", dict_entry, "\n")
+        print("-----------------------------------------\n")
 
     # typo_df.to_pickle("results_df/typo_df_{}_{}_{}.pkl".format(unigram_weight, bigram_weight, prob_threshold))
 
