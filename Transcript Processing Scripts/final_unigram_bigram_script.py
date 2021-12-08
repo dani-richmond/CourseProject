@@ -3,6 +3,7 @@ import re
 import os
 import math
 import nltk
+import io
 
 # downaload and import the necessary components of NLTK library
 nltk.download('punkt')
@@ -90,7 +91,7 @@ def read_textbook(files, dirname):
     curr_file = files
     documents_path = dirname + '/' + files
 
-    with open (documents_path, 'r', encoding="utf8") as doc:
+    with io.open (documents_path, 'r', encoding="utf8") as doc:
         for line in doc.readlines():
             textbook.append(line.strip())
 
@@ -106,8 +107,18 @@ def read_files(dirname, ftype, ext):
 def get_timestamp(val):
     #print(timestamp_dict)
     dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
-
     return dict_entry
+
+# test finding timestamp for typo
+def get_timestamp_for_inaudible(val):
+    output = []
+    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
+    for inaudible in dict_entry:
+        words = [timestamp_dict[inaudible]][0].split()
+        index = words.index(val)
+        output.append([index, val, timestamp_dict[inaudible], inaudible])
+        # print(output)
+    return output
 
 # create class with functions that build unigram language model
 class UnigramLanguageModel:
