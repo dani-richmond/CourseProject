@@ -58,10 +58,12 @@ def main():
 
     #Load transcripts to data structure
     transcripts =  tf.load_corpus(transcript_file)
+    print("\nTotal words in transcripts: ", len(transcripts.split(' ')))
     #Instantiate TypoFinder, with user defined weights and threshold
     finder = tf.TypoFinder(unigram_model, bigram_model, prob_threshold, unigram_weight, bigram_weight)
     #List of potential typos
     typo_list = finder.typo_finder(transcripts)
+    print("\nTotal typos found: ", len(typo_list))
 
     # write list of typos and inaudible words to a results file for human user to utilize for transcript review and fixing
     with open('results.txt', 'w') as f:
