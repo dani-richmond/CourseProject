@@ -6,7 +6,7 @@ from os.path import exists
 def main():
 
     #Input user directory and file name values, as well as typo finding weights, threshold, etc.
-    transcript_dir = '../transcripts_srt'
+    transcript_dir = '../transcripts'
     textbook_dir = '../Textbook'
     unigram_model = 'mixt_frequencies.txt'
     bigram_model = 'mixt_bigram_frequencies.txt'
@@ -72,31 +72,48 @@ def main():
         #print("\n", dict_entry, "\n")
         #print("-----------------------------------------\n")
 
+    # with open('results.txt', 'w') as f:
+        # for typo in typo_list:
+            # for element in typo:
+                # if type(element) != str:
+                    # f.write(str(element) + ' ')
+                # else:
+                    # f.write(element + ' ')
+            # f.write('\n')
+            # dict_entry = ngmod.get_timestamp(typo[1])
+            # f.write(str(dict_entry))
+            # f.write('\n')
+            # f.write('--------------------------------------------------')
+            # f.write('\n')
+        # f.write('--------INAUDIBLE ENTRIES----------------------------')   
+        # f.write('\n')
+        # inaudible_list = ngmod.get_timestamp_for_inaudible('inaudible')
+        # for inaudible in inaudible_list:
+            # f.write(str(inaudible[0]) + ' ' + str(inaudible[1]) + ' 0 ' + str(inaudible[2]))
+            # f.write('\n')
+            # f.write(str(inaudible[3]))
+            # f.write('\n')
+            # f.write('--------------------------------------------------')
+            # f.write('\n')       
+    # f.close()
+
     with open('results.txt', 'w') as f:
         for typo in typo_list:
-            for element in typo:
-                if type(element) != str:
-                    f.write(str(element) + ' ')
-                else:
-                    f.write(element + ' ')
+            f.write('Potential Typo Word: ' + str(typo[1]))
+            f.write('\n')
+            f.write('Word Index: ' + str(typo[0]))
+            f.write('\n')
+            f.write('Word Probability Score: ' + str(typo[2]))
+            f.write('\n')
+            f.write('Text containing Word: ' + str(typo[3]))
+            f.write('\n')
+            f.write('Transcript and Timestamp Details: ')
             f.write('\n')
             dict_entry = ngmod.get_timestamp(typo[1])
             f.write(str(dict_entry))
             f.write('\n')
             f.write('--------------------------------------------------')
             f.write('\n')
-        f.write('--------INAUDIBLE ENTRIES----------------------------')   
-        f.write('\n')
-        inaudible_list = ngmod.get_timestamp_for_inaudible('inaudible')
-        for inaudible in inaudible_list:
-            f.write(str(inaudible[0]) + ' ' + str(inaudible[1]) + ' 0 ' + str(inaudible[2]))
-            f.write('\n')
-            f.write(str(inaudible[3]))
-            f.write('\n')
-            f.write('--------------------------------------------------')
-            f.write('\n')
-
-            
     f.close()
 
     # typo_df.to_pickle("results_df/typo_df_{}_{}_{}.pkl".format(unigram_weight, bigram_weight, prob_threshold))
