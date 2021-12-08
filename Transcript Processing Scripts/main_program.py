@@ -85,6 +85,18 @@ def main():
             f.write('\n')
             f.write('--------------------------------------------------')
             f.write('\n')
+        f.write('--------INAUDIBLE ENTRIES----------------------------')   
+        f.write('\n')
+        inaudible_list = ngmod.get_timestamp_for_inaudible('inaudible')
+        for inaudible in inaudible_list:
+            f.write(str(inaudible[0]) + ' ' + str(inaudible[1]) + ' 0 ' + str(inaudible[2]))
+            f.write('\n')
+            f.write(str(inaudible[3]))
+            f.write('\n')
+            f.write('--------------------------------------------------')
+            f.write('\n')
+
+            
     f.close()
 
     # typo_df.to_pickle("results_df/typo_df_{}_{}_{}.pkl".format(unigram_weight, bigram_weight, prob_threshold))
