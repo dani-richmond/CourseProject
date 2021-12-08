@@ -116,8 +116,7 @@ def get_timestamp_for_inaudible(val):
     for inaudible in dict_entry:
         words = [timestamp_dict[inaudible]][0].split()
         index = words.index(val)
-        output.append([index, val, timestamp_dict[inaudible], inaudible])
-        # print(output)
+        output.append([index, timestamp_dict[inaudible], inaudible])
     return output
 
 # create class with functions that build unigram language model
