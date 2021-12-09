@@ -103,23 +103,6 @@ def read_files(dirname, ftype, ext):
         elif files.endswith(ext) and ftype == 'textbook':
             read_textbook(files, dirname)
 
-# test finding timestamp for typo
-def get_timestamp(val):
-    #print(timestamp_dict)
-    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
-    return dict_entry
-
-# test finding timestamp for typo
-def get_timestamp_for_inaudible(val):
-    output = []
-    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
-    for inaudible in dict_entry:
-        words = [timestamp_dict[inaudible]][0].split()
-        index = words.index(val)
-        output.append([index, val, timestamp_dict[inaudible], inaudible])
-        # print(output)
-    return output
-
 # create class with functions that build unigram language model
 class UnigramLanguageModel:
     def __init__(self, text_data, smoothing=False):
@@ -171,7 +154,6 @@ class BigramLanguageModel(UnigramLanguageModel):
     def __init__(self, text_data, smoothing=False):
         UnigramLanguageModel.__init__(self, text_data, smoothing)
         self.bigram_frequencies = {}
-        # self.unigram_frequencies = {}
         self.unique_bigrams = set()
         self.smoothing = smoothing
         text_data = [unigram_text_formatter(text) for text in text_data]
@@ -215,3 +197,19 @@ def bigram_mixture_probs(transcript_prob_dict, textbook_prob_dict, lam = 0):
 
     return bigram_mixture_prob_dict
 
+# function to find the transcript/timestamp info for typo
+def get_timestamp(val):
+    #print(timestamp_dict)
+    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
+    return dict_entry
+
+# function to find the transcript/timestamp info for all cases where the transcript just says 'inaudible'
+def get_timestamp_for_inaudible(val):
+    output = []
+    dict_entry = {k:v for k,v in timestamp_dict.items() if (re.search('\\b' +val+ '\\b', v) is not None)}
+    for inaudible in dict_entry:
+        words = [timestamp_dict[inaudible]][0].split()
+        index = words.index(val)
+        output.append([index, val, timestamp_dict[inaudible], inaudible])
+        # print(output)
+    return output
