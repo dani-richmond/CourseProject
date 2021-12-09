@@ -15,4 +15,4 @@ Instructions on How to Run Locally:
 6. Run the main program
 7. The potential typo results can be reviewed in the results.txt file that is output
 
-Link to Video documentation: https://drive.google.com/file/d/1-0E1blOFC5lPSQQZpVIlBQVXxFOCMdmk/view
+Link to Video documentation: https://drive.google.com/file/d/1-0E1blOFC5lPSQQZpVIlBQVXxFOCMdmk/view?usp=sharing
